@@ -202,3 +202,28 @@ endif()
 compile_actor_file("${CMAKE_CURRENT_SOURCE_DIR}/examples/weft_flow_hello.actor.cpp" WEFT_FLOW_HELLO_GEN)
 add_executable(weft_flow_hello "${WEFT_FLOW_HELLO_GEN}")
 target_link_libraries(weft_flow_hello PRIVATE flow)
+
+# --- weft_flow_cnode: RFD 5's other half - proves an erl_interface/ei C
+# Node can register as a real peer on the Erlang distribution protocol
+# and exchange messages with a live BEAM node, the bridge mechanism a
+# BEAM consumer (e.g. taskweft) uses to reach the independently-running
+# Flow core (a NIF can't be a persistent run loop; see RFD 5). Not
+# linked against `flow` itself yet - this only proves the C Node
+# mechanism; wiring Flow's own run loop behind it is later work.
+if(WIN32)
+  execute_process(
+    COMMAND erl -eval "io:format(\"~s\", [code:lib_dir(erl_interface)])" -s init stop -noshell
+    OUTPUT_VARIABLE ERL_INTERFACE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(ERL_INTERFACE_DIR)
+    add_executable(weft_flow_cnode examples/cnode/weft_flow_cnode.cpp)
+    target_include_directories(weft_flow_cnode PRIVATE "${ERL_INTERFACE_DIR}/include")
+    # __WIN32__ (not the standard _WIN32/WIN32 clang/mingw already define):
+    # erl_interface's own ei.h gates its ssize_t typedef and winsock includes
+    # on this exact macro, which only Erlang's own (MSVC-based) build system
+    # defines by default - clang/llvm-mingw never sets it, so without this
+    # define ei.h fails with "unknown type name 'ssize_t'".
+    target_compile_definitions(weft_flow_cnode PRIVATE __WIN32__)
+    target_link_libraries(weft_flow_cnode PRIVATE "${ERL_INTERFACE_DIR}/lib/ei.lib" ws2_32)
+  endif()
+endif()
