@@ -1,0 +1,116 @@
+:showtitle:
+:toc: left
+:icons: font
+:state: ideation
+:discussion:
+:labels: software, architecture
+:authors: K. S. Ernest (iFire) Lee <ernest.lee@chibifire.com>
+
+= RFD 5 Flow as the Godot-embeddable server core; BEAM reaches it as a C Node peer
+
+This RFD narrows xref:../0002/README.adoc[RFD 2]'s scope in light of a
+destination that wasn't stated when RFD 2 was written: this repo's
+actual target is "the whole multiplayer server," and that server must
+be embeddable directly into a Godot Engine C++ module - not run as a
+separate process a module talks to over a socket.
+
+== Why this isn't a BEAM-vs-Flow toss-up
+
+RFD 2 framed BEAM/OTP as *replacing* Flow as the host for the s7
+sandbox tier specifically, and RFD 3 built and proved that (this
+repo's `WeftWarpBurrito.Sandbox` GenServer + Fine NIF over
+`libriscv::Machine`, working end to end). Neither RFD had "must embed
+in a Godot C++ module" as a constraint yet. With that constraint now
+stated, the two options are not symmetric:
+
+* *BEAM is a separate VM/runtime*, not a library. There is no
+  "`#include` the Erlang VM into my C++ module" - the standard
+  integration shape is BEAM running as its own OS process, with a host
+  talking to it over a port/socket (exactly what this repo's own
+  Burrito packaging already does for a standalone executable). That is
+  a process boundary, not an in-process embed.
+* *Flow is pure C++* and links directly into a host process the same
+  way this repo's own `libriscv`+s7 already does. `weft-warp-loop` has
+  already proven this exact shape for a Godot-facing consumer:
+  `fanout-core` is Lean4-FFI'd straight into the Flow zone server, and
+  ADR 0050/0051 already frame Godot as one adapter among several behind
+  a narrow port (the ZPB wire protocol), with the core required to stay
+  engine-agnostic. This repo's "whole multiplayer server" destination
+  is the same shape, not a new one to invent.
+
+So: *Flow is the core*, for the same reason `libriscv` is already the
+sandbox's execution substrate - it is the option that is actually
+embeddable where embeddability is a hard requirement, not merely a
+preference.
+
+== Where BEAM still fits
+
+RFD 2/3's BEAM work is not wasted - it just changes role. Standalone,
+non-Godot consumers (`taskweft`'s MCP server is the concrete example
+already migrated into this repo per RFD 4) have no Godot-embedding
+constraint at all, and stay BEAM-hosted. What changes is *how* a BEAM
+consumer reaches the Flow-hosted core: not by BEAM/OTP hosting its own
+actor model as a Flow replacement (RFD 2's original framing), and not
+by a NIF either - by a **C Node** (`erl_interface`/`ei`), with Flow's
+own process registering as a peer on the Erlang distribution protocol.
+
+This is a real, load-bearing distinction: RFD 2's "BEAM replaces Flow"
+conclusion stays correct for the s7 sandbox tier taken in isolation
+(nothing about that tier's own pause/gas/sandbox needs changes here,
+and its Fine NIF over `libriscv` stays exactly as RFD 3 built it - a
+NIF remains the right tool for one bounded VMCALL). It does not
+generalize to "the whole multiplayer server" once that server must
+also live inside a Godot module - there, Flow has to be the thing
+that's actually running, and BEAM is a client of it, via a different
+bridge mechanism than the sandbox uses.
+
+== Why a C Node, not a NIF, for the Flow bridge
+
+A NIF wrapping one fuel-bounded `libriscv` VMCALL is a quick, bounded,
+in-and-out call - exactly the shape ADR 0007's "no indefinitely-running
+loop inside the BEAM VM" constraint requires, and exactly what a dirty
+NIF is for. A Flow-hosted zone/authority server is the opposite shape:
+a long-running, event-driven actor system that keeps running for the
+server's entire lifetime, not a bounded call that returns. A NIF call
+can't *be* a persistently running server - naively "wrapping the whole
+multiplayer server in a NIF" does not fit the pattern the sandbox NIF
+used at all.
+
+A **C Node** is the mechanism actually built for this shape: an
+external process links `erl_interface`/`ei`, registers itself with
+`epmd` as a named node, and becomes a real peer on the Erlang
+distribution protocol - sending and receiving ordinary Erlang messages
+to/from real processes - without being a BEAM VM itself. Flow's own
+process keeps running its own run loop entirely independently of any
+BEAM scheduler; BEAM-side consumers (`taskweft` or anything else) just
+address it as `{some_name, 'flow@host'}` and exchange messages, the
+same as they would with any other distributed Erlang node. This
+resolves the persistent-run-loop mismatch a NIF has no answer for:
+message-passing between independently-running peers is the native
+shape for "a system that's always running," where a bounded call
+in/return-out is the native shape for "one fuel-metered VMCALL."
+
+== Unresolved questions
+
+* What does the C Node's message protocol actually look like - which
+  Erlang terms/message shapes Flow sends and receives, and whether it
+  needs its own thin serialization layer on the Flow side (Flow has no
+  native concept of Erlang terms) or reuses an existing wire format
+  this repo already has (e.g. the ZPB protocol `weft-warp-loop`'s zone
+  server already speaks).
+* Does the s7/libriscv sandbox itself eventually run *inside* the Flow
+  core (mirroring `weft-warp-loop`'s own `s7_riscv_actor.actor.cpp`,
+  "called from a real Flow actor," per ADR 0006) rather than staying a
+  separate BEAM-hosted tier - i.e., does Flow end up hosting the
+  sandbox too, with BEAM/taskweft as just one more caller into the same
+  core? This RFD takes no position; RFD 1-3's BEAM-hosted sandbox stays
+  valid either way until this is actually decided.
+* `weft-warp-loop`'s Flow build (`vcpkg.json`) pulls in ~15 Boost
+  components, OpenSSL, fmt, and a Python+Jinja2 codegen step - a much
+  larger build surface than anything currently in `weft-warp-burrito`.
+  Vendoring this is real, unstarted work, not a small addition; no
+  estimate is made here.
+* Does `taskweft` itself need to reach the Flow core at all, or is it
+  staying a standalone planner with no multiplayer-server dependency -
+  i.e., is the C Node bridge a real near-term need or a capability this
+  repo should have available once something needs it?
