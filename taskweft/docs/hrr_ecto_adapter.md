@@ -8,11 +8,11 @@ Holographic Reduced Representations, backed by SQLite for persistence.
 ## Motivation
 
 Standard Ecto adapters store records in relational tables and query them
-with exact predicate logic.  Taskweft needs to query planning state by
-*semantic similarity* — "find tasks related to this entity", not "find
-tasks WHERE entity_id = X".  HRRs let us encode any record as a dense
+with exact predicate logic. Taskweft needs to query planning state by
+_semantic similarity_ — "find tasks related to this entity", not "find
+tasks WHERE entity_id = X". HRRs let us encode any record as a dense
 phase vector, bind field roles into it, and recover approximate field
-values via circular convolution.  The result is a store that handles
+values via circular convolution. The result is a store that handles
 exact lookups and approximate semantic search within the same Ecto API.
 
 ---
@@ -21,18 +21,18 @@ exact lookups and approximate semantic search within the same Ecto API.
 
 ### `Taskweft.HRR.Adapter`
 
-The Ecto adapter shim.  Registers `Ecto.Adapter`, `Ecto.Adapter.Schema`,
+The Ecto adapter shim. Registers `Ecto.Adapter`, `Ecto.Adapter.Schema`,
 `Ecto.Adapter.Queryable`, and `Ecto.Adapter.Transaction` behaviours
 conditionally at compile time (`Code.ensure_loaded?`) so the library
 compiles without Ecto as a dependency.
 
 Config keys forwarded to `Storage`:
 
-| Key        | Default                       | Purpose               |
-|------------|-------------------------------|-----------------------|
-| `:hrr_dim` | `1024`                        | HRR vector dimension  |
-| `:name`    | `Taskweft.HRR.Storage`        | GenServer name        |
-| `:db_path` | `~/.taskweft/<name>.db`       | SQLite file path      |
+| Key        | Default                 | Purpose              |
+| ---------- | ----------------------- | -------------------- |
+| `:hrr_dim` | `1024`                  | HRR vector dimension |
+| `:name`    | `Taskweft.HRR.Storage`  | GenServer name       |
+| `:db_path` | `~/.taskweft/<name>.db` | SQLite file path     |
 
 `update/6` and `insert_all/8` are each wrapped in their own transaction
 so the delete+insert pair (update) and multi-row batch (insert_all) are
@@ -40,7 +40,7 @@ atomic.
 
 ### `Taskweft.HRR.Storage`
 
-SQLite-backed GenServer.  Owns two tables:
+SQLite-backed GenServer. Owns two tables:
 
 ```sql
 hrr_records (
@@ -107,9 +107,9 @@ results below `:threshold` excluded.
 **Transactions**
 
 SQLite `BEGIN` / `COMMIT` / `ROLLBACK` at depth 0; `SAVEPOINT sp{N}` /
-`RELEASE` / `ROLLBACK TO` for nested calls.  Bundle rebuilds are
+`RELEASE` / `ROLLBACK TO` for nested calls. Bundle rebuilds are
 deferred until the outermost commit so probes inside a transaction see
-the pre-transaction bundle state.  Calling commit or rollback outside
+the pre-transaction bundle state. Calling commit or rollback outside
 a transaction returns `{:error, :not_in_transaction}`.
 
 **Public API**
@@ -137,42 +137,42 @@ Translates Ecto query ASTs into Storage calls.
 
 **WHERE strategies**
 
-| WHERE shape                    | Strategy                             |
-|-------------------------------|--------------------------------------|
+| WHERE shape                   | Strategy                             |
+| ----------------------------- | ------------------------------------ |
 | none                          | `Storage.all/2`                      |
 | single `LIKE`/`ILIKE`         | `Storage.probe_field/5` (HRR cosine) |
 | single `==` or `!=`           | `Storage.all/2` + in-memory filter   |
 | multiple predicates (any mix) | `Storage.all/2` + in-memory filter   |
 
 For `LIKE`/`ILIKE`, SQL wildcards (`%`, `_`) are stripped from the
-pattern before encoding.  The bare search term is what goes into the
-HRR encoder.  When a `LIKE` appears alongside other predicates (multi-
+pattern before encoding. The bare search term is what goes into the
+HRR encoder. When a `LIKE` appears alongside other predicates (multi-
 WHERE path), it falls back to regex for consistency.
 
 **Joins**
 
-Inner joins are supported.  The join condition selects the strategy:
+Inner joins are supported. The join condition selects the strategy:
 
-| `ON` condition   | Strategy                                                |
-|------------------|---------------------------------------------------------|
-| `a.k == b.k`     | Exact hash join — group right by key, match left        |
-| `a.k LIKE b.k`   | HRR semantic join — rank right rows by cosine similarity|
-| anything else    | Cross join                                              |
+| `ON` condition | Strategy                                                 |
+| -------------- | -------------------------------------------------------- |
+| `a.k == b.k`   | Exact hash join — group right by key, match left         |
+| `a.k LIKE b.k` | HRR semantic join — rank right rows by cosine similarity |
+| anything else  | Cross join                                               |
 
 Joined rows are represented as `[left_map, right_map, ...]`; the binding
-index in field references selects the correct map.  Unresolvable join
-sources produce no rows.  LEFT JOIN is silently treated as INNER JOIN.
+index in field references selects the correct map. Unresolvable join
+sources produce no rows. LEFT JOIN is silently treated as INNER JOIN.
 
 **Aggregates**
 
-| Expression      | Computation                                              |
-|-----------------|----------------------------------------------------------|
-| `count(*)`      | Fast path: reads `record_count` from `hrr_bundles` (O(1))|
-| `count(field)`  | Count non-nil values after filter                        |
-| `sum(field)`    | Sum numeric field values after filter                    |
-| `avg(field)`    | Average numeric field values after filter                |
-| `min(field)`    | Minimum field value after filter                         |
-| `max(field)`    | Maximum field value after filter                         |
+| Expression     | Computation                                               |
+| -------------- | --------------------------------------------------------- |
+| `count(*)`     | Fast path: reads `record_count` from `hrr_bundles` (O(1)) |
+| `count(field)` | Count non-nil values after filter                         |
+| `sum(field)`   | Sum numeric field values after filter                     |
+| `avg(field)`   | Average numeric field values after filter                 |
+| `min(field)`   | Minimum field value after filter                          |
+| `max(field)`   | Maximum field value after filter                          |
 
 `count(*)` without a WHERE clause or joins reads directly from
 `hrr_bundles.record_count` — no scan of `hrr_records`.
@@ -183,7 +183,7 @@ processing.
 **Query option**
 
 `:hrr_threshold` (default `0.1`) — minimum cosine similarity for
-`probe_field` results.  Pass as the fifth argument to `Repo.all/2`:
+`probe_field` results. Pass as the fifth argument to `Repo.all/2`:
 
 ```elixir
 Repo.all(query, hrr_threshold: 0.3)
@@ -193,48 +193,48 @@ Repo.all(query, hrr_threshold: 0.3)
 
 ## SQL concept mapping
 
-| SQL concept      | HRR operation                                             |
-|------------------|-----------------------------------------------------------|
-| Table            | Per-source `hrr_bundles` row (superposition)              |
-| INSERT           | `hrr_bundle([hrr_bind(role(f), encode(v)) ...])`          |
-| DELETE           | Remove record vector, rebuild bundle                      |
-| UPDATE           | DELETE + INSERT (atomic, wrapped in transaction)          |
-| SELECT *         | Deserialise JSON from `hrr_records`                       |
-| WHERE f = v      | Exact equality after full scan                            |
-| WHERE f LIKE %q% | `probe_field` → cosine rank by `encode(q)`                |
-| COUNT(*)         | O(1) read from `hrr_bundles.record_count`                 |
-| JOIN ON a = b    | Hash join (group right by key)                            |
-| JOIN ON a LIKE b | Semantic join via `vectors_for_join` + cosine similarity  |
-| BEGIN/COMMIT     | `begin_transaction` / `commit_transaction`                |
-| SAVEPOINT        | Nested `begin_transaction` calls                          |
+| SQL concept      | HRR operation                                            |
+| ---------------- | -------------------------------------------------------- |
+| Table            | Per-source `hrr_bundles` row (superposition)             |
+| INSERT           | `hrr_bundle([hrr_bind(role(f), encode(v)) ...])`         |
+| DELETE           | Remove record vector, rebuild bundle                     |
+| UPDATE           | DELETE + INSERT (atomic, wrapped in transaction)         |
+| SELECT \*        | Deserialise JSON from `hrr_records`                      |
+| WHERE f = v      | Exact equality after full scan                           |
+| WHERE f LIKE %q% | `probe_field` → cosine rank by `encode(q)`               |
+| COUNT(\*)        | O(1) read from `hrr_bundles.record_count`                |
+| JOIN ON a = b    | Hash join (group right by key)                           |
+| JOIN ON a LIKE b | Semantic join via `vectors_for_join` + cosine similarity |
+| BEGIN/COMMIT     | `begin_transaction` / `commit_transaction`               |
+| SAVEPOINT        | Nested `begin_transaction` calls                         |
 
 ---
 
 ## NIF type contract
 
-All HRR NIFs live in `Taskweft.NIF`.  The type boundary matters:
+All HRR NIFs live in `Taskweft.NIF`. The type boundary matters:
 
-| NIF                       | Input           | Output  |
-|---------------------------|-----------------|---------|
-| `hrr_encode_atom/2`       | string, integer | phases  |
-| `hrr_encode_text/2`       | string, integer | phases  |
-| `hrr_phases_to_bytes/1`   | phases          | bytes   |
-| `hrr_bytes_to_phases/2`   | bytes, 0        | phases  |
-| `hrr_bind/2`              | bytes, bytes    | bytes   |
-| `hrr_unbind/2`            | bytes, bytes    | bytes   |
-| `hrr_bundle/1`            | [bytes]         | bytes   |
-| `hrr_similarity/2`        | phases, phases  | float   |
+| NIF                     | Input           | Output |
+| ----------------------- | --------------- | ------ |
+| `hrr_encode_atom/2`     | string, integer | phases |
+| `hrr_encode_text/2`     | string, integer | phases |
+| `hrr_phases_to_bytes/1` | phases          | bytes  |
+| `hrr_bytes_to_phases/2` | bytes, 0        | phases |
+| `hrr_bind/2`            | bytes, bytes    | bytes  |
+| `hrr_unbind/2`          | bytes, bytes    | bytes  |
+| `hrr_bundle/1`          | [bytes]         | bytes  |
+| `hrr_similarity/2`      | phases, phases  | float  |
 
-Phases are Elixir lists of floats (radians).  Bytes are Erlang binaries
-(little-endian float64 arrays).  `hrr_bundle` decodes bytes internally,
-averages the phase vectors, and re-encodes to bytes.  `hrr_similarity`
+Phases are Elixir lists of floats (radians). Bytes are Erlang binaries
+(little-endian float64 arrays). `hrr_bundle` decodes bytes internally,
+averages the phase vectors, and re-encodes to bytes. `hrr_similarity`
 operates on phases only — always convert bytes before calling it.
 
 ---
 
 ## Caveats
 
-- All reads are full table scans (filtered or ranked in Elixir).  For
+- All reads are full table scans (filtered or ranked in Elixir). For
   large sources, prefer `probe_field` with a non-trivial threshold so
   the ranked result set stays small.
 - `LIKE` patterns that reduce to an empty string after wildcard
@@ -250,12 +250,12 @@ operates on phases only — always convert bytes before calling it.
 
 163 PropCheck properties across four files:
 
-| File                              | Properties | What is tested                                          |
-|-----------------------------------|------------|---------------------------------------------------------|
-| `hrr_prop_test.exs`               | 16         | NIF contracts: encode, similarity, roundtrip, bind      |
-| `hrr_storage_prop_test.exs`       | 30         | Storage: CRUD, probe ranking/threshold/limit, persistence|
-| `hrr_query_prop_test.exs`         | 15         | Query: ==, !=, LIKE, ORDER BY, LIMIT, OFFSET, composition|
-| `hrr_txn_join_agg_prop_test.exs`  | 25         | Transactions, exact joins, semantic joins, aggregates   |
+| File                             | Properties | What is tested                                            |
+| -------------------------------- | ---------- | --------------------------------------------------------- |
+| `hrr_prop_test.exs`              | 16         | NIF contracts: encode, similarity, roundtrip, bind        |
+| `hrr_storage_prop_test.exs`      | 30         | Storage: CRUD, probe ranking/threshold/limit, persistence |
+| `hrr_query_prop_test.exs`        | 15         | Query: ==, !=, LIKE, ORDER BY, LIMIT, OFFSET, composition |
+| `hrr_txn_join_agg_prop_test.exs` | 25         | Transactions, exact joins, semantic joins, aggregates     |
 
 Key properties:
 
@@ -276,5 +276,5 @@ Key properties:
 - **Exact join**: joined rows have matching key values on both sides.
 - **Semantic join threshold**: no joined row has cosine similarity below
   the configured threshold.
-- **COUNT(*) fast path**: `count(*)` without WHERE equals `length(all)`.
+- **COUNT(\*) fast path**: `count(*)` without WHERE equals `length(all)`.
 - **Aggregate consistency**: `min ≤ avg ≤ max` for any non-empty source.

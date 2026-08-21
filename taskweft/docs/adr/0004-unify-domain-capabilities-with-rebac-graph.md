@@ -11,7 +11,7 @@ coherent concept (`docs/rectgtn.md`), but the implementation is two
 disconnected mechanisms:
 
 - A plan domain's `capabilities` object (`{"entities": {...}, "actions":
-  {...}}`) is flattened at domain-load time into boolean state variables
+{...}}`) is flattened at domain-load time into boolean state variables
   (`_cap_<capability>[entity] = true`, `tw_loader.hpp` lines ~925-956) and
   checked as simple guards during planning. There is no relationship graph,
   no transitive membership, no expression composition — just a flat
@@ -26,7 +26,7 @@ disconnected mechanisms:
 The result: a domain author who wants "an agent qualifies for this action if
 it directly holds capability X, OR is a member of a team that holds X" cannot
 express that — the flat model has no transitivity or composition, and the
-graph engine that *does* support it has no hook into action guards.
+graph engine that _does_ support it has no hook into action guards.
 
 ## Decision Drivers
 
@@ -56,7 +56,7 @@ graph engine that *does* support it has no hook into action guards.
 Chosen: **option 2**. The flat shape stays as valid, simple-case sugar
 (direct `HAS_CAPABILITY` edges, no transitivity needed), but the planner's
 guard evaluation goes through the same relation-expression engine
-`Taskweft.ReBAC` already implements, so a domain *can* opt into
+`Taskweft.ReBAC` already implements, so a domain _can_ opt into
 transitive/composed expressions without a second mechanism being invented.
 
 Implemented as:
@@ -77,7 +77,7 @@ Implemented as:
   (state-in/state-out), so the guard-evaluation change is entirely inside
   the `TwActionFn`-wrapping closure `tw_loader.hpp` builds per action: it now
   calls `TwReBAC::check_expr` against the compiled `(relation-expression,
-  object)` requirements and the domain's graph, instead of reading a
+object)` requirements and the domain's graph, instead of reading a
   precomputed boolean.
 - **Validator** (`lib/taskweft/jsonld/loader.ex`): `check_capabilities`
   extended to accept the new `"graph"` key and either shape for `"actions"`

@@ -6,7 +6,7 @@ commit `6fafd8e08ee1410917ea6e0d99bd27233c89fe15` (`main`), Apache License 2.0:
 - `actorcompiler/` ← `flow/actorcompiler_py/` (renamed as a package). This
   is FoundationDB's own current default actor-compiler
   (`cmake/CompileActorCompiler.cmake`: `ACTORCOMPILER_COMMAND = python -m
-  flow.actorcompiler_py`) — the C#/.NET implementation is a fallback path
+flow.actorcompiler_py`) — the C#/.NET implementation is a fallback path
   (`FDB_USE_CSHARP_TOOLS`). Zero external pip dependencies (stdlib only).
 - `flow/` and `contrib/{crc32,stacktrace,folly_memcpy,SimpleOpt,libb64}` —
   upstream's own `flow/CMakeLists.txt` compiles the entire `flow/`

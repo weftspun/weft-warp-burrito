@@ -83,7 +83,7 @@ non-owning `std::string_view` over the guest ELF bytes
 them. `s7_riscv_core.cpp`'s first version read the ELF into a
 function-local `std::vector`, which was destroyed the moment
 `s7RiscvInitialize()` returned, leaving `Machine`'s view dangling. Calls
-made *inside* that function (`simulate()`, running the guest's own
+made _inside_ that function (`simulate()`, running the guest's own
 `main()`) still worked; anything called afterward — `vmcall()`,
 `address_of()` — touched freed memory. Fixed by keeping the byte buffer
 alive as a companion global next to the `Machine` itself, for as long as

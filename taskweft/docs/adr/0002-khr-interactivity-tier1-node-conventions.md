@@ -42,7 +42,7 @@ Tier 1's first two milestones and will recur through the rest of it:
 ## Decision Outcome
 
 **1. Decompose before implementing a new primitive.** Before adding a new
-opcode, check whether the node is *defined by the spec itself* in terms of
+opcode, check whether the node is _defined by the spec itself_ in terms of
 already-implemented operations, and if so inline that formula directly rather
 than introducing new algebra:
 
@@ -61,7 +61,7 @@ than introducing new algebra:
 Before writing the C++ for a node with non-obvious numeric properties
 (`smoothStep`'s range, `rotate2D`'s length-preservation), write a Lean
 reference model first and witness-certify the invariants via
-`plausible-witness-dag` (see `lean/KHRTier1Witness.lean`), *then* implement
+`plausible-witness-dag` (see `lean/KHRTier1Witness.lean`), _then_ implement
 the C++ and cross-check against it. Not required for mechanical
 decompositions with no numeric subtlety (e.g. the `combine`/`extract`
 family, `quatFromAngles`'s composition — those were cross-checked directly

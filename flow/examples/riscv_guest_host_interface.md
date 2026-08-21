@@ -65,7 +65,7 @@ No concrete guest-side function names or argument shapes are decided
 here — that depends on what scripted content actually looks like (mission
 scripts vs. loot tables vs. NPC behavior have different natural call
 shapes), which is unspecified beyond the examples ADR 0006 already lists.
-This section only fixes the calling *mechanism* the eventual content
+This section only fixes the calling _mechanism_ the eventual content
 design should target: `vmcall("<entry point>", <host-supplied
 deterministic inputs>...)`, fuel-limited (item 7), against a guest that
 never touches real I/O (item 6).

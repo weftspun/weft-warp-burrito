@@ -25,5 +25,9 @@ taskweft mcp [--http [--port N]]     # MCP server: stdio, or HTTP
 Point your MCP config at the binary — no `mix`, no toolchain:
 
 ```json
-{ "mcpServers": { "taskweft": { "command": "/path/to/taskweft", "args": ["mcp"] } } }
+{
+  "mcpServers": {
+    "taskweft": { "command": "/path/to/taskweft", "args": ["mcp"] }
+  }
+}
 ```

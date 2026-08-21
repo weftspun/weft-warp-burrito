@@ -36,7 +36,7 @@ Copied verbatim at `weft-warp-loop` commit `07066051` (2026-07-20):
   (types, temporal, ReBAC/FloydWarshall, HRR, WitnessDAG, the
   reentrant planner, ISO8601 duration parsing, `qc-fuzz`, and
   `loot.shrub`), plus `_verify_snippet.shrub`. Source only - the
-  *generated* `.scm` output (`shrubbery_to_scheme.py`'s build product,
+  _generated_ `.scm` output (`shrubbery_to_scheme.py`'s build product,
   one `-generated.scm` per `.shrub` file) and the Python reader itself
   are intentionally not copied: regenerating from `.shrub` is the
   point of keeping only the source, not a frozen build artifact that

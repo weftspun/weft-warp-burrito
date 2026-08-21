@@ -71,8 +71,8 @@ budget) — not to add hand-authored heuristics back in.
 
 This does not forbid hand-authored structure everywhere: RECTGTN is HTN, not
 raw STRIPS, so some decomposition is inherent to the model (option 3 is
-rejected). The line is between *facts* (always hand-authored: what an action
-requires/produces) and *strategy* (should be generic + search-resolved, not
+rejected). The line is between _facts_ (always hand-authored: what an action
+requires/produces) and _strategy_ (should be generic + search-resolved, not
 author-decided per case).
 
 ### Consequences

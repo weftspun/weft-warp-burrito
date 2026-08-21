@@ -75,10 +75,10 @@ compiler)**, explicitly not options 1, 2, or 4.
   `date/`) — no CMake or submodule needed.
 - **Compiler**: a new component (planned file: `tw_graph_compile.hpp`) that
   lowers a KHR_interactivity-shaped behavior graph (flow nodes + event nodes
-  + Tier 1 value nodes) directly into riscv64 (Linux ABI) machine code —
-  flow-graph control edges become basic blocks with explicit
-  branches/calls — rather than routing through C source and an external
-  toolchain.
+  - Tier 1 value nodes) directly into riscv64 (Linux ABI) machine code —
+    flow-graph control edges become basic blocks with explicit
+    branches/calls — rather than routing through C source and an external
+    toolchain.
 - **Host/guest boundary** (planned file: `tw_graph_vm.hpp`): a minimal
   syscall ABI back into existing machinery —
   `tw_pointer_get`/`tw_pointer_set` (→ `TwState::get_nested`/`set_nested`,
@@ -113,7 +113,7 @@ compiler)**, explicitly not options 1, 2, or 4.
   additive alongside the existing symbolic planner.
 - Bad: this is a genuinely new, sizeable subsystem (a custom compiler
   targeting a real ISA, plus a VM host layer) — not a quick add like Tier 1.
-  Explicitly sequenced *after* Tier 1 completes, since `tw_eval` depends on
+  Explicitly sequenced _after_ Tier 1 completes, since `tw_eval` depends on
   the full Tier 1 value layer.
 - Open, deliberately not resolved by this ADR: whether a graph-backed
   action is synchronous (planner calls it, gets a new state back
@@ -128,7 +128,8 @@ for the prerequisite value layer. Planned milestone order: (1) vendor
 `libriscv`, prove a hand-written trivial guest ELF runs and
 serializes/resumes inside `tw_graph_vm.hpp`; (2) build the compiler for the
 no-state subset (`flow/sequence`/`branch`/`switch`), wire `tw_execute_graph`
-+ `Taskweft.Graph`; (3) event model + suspend/resume persistence; (4)
-remaining flow nodes, `animation/*`, `pointer/interpolate`/
-`variable/interpolate`; (5) resolve the sync-vs-async action integration
-question against `tw_planner.hpp`.
+
+- `Taskweft.Graph`; (3) event model + suspend/resume persistence; (4)
+  remaining flow nodes, `animation/*`, `pointer/interpolate`/
+  `variable/interpolate`; (5) resolve the sync-vs-async action integration
+  question against `tw_planner.hpp`.

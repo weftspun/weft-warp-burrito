@@ -58,7 +58,7 @@ already correct; the rest of the stack caught up to it.
   `blocks_world_multigoal` fixture), governed transitively by `taskweft_mcp`.
 - In-repo test domains migrated off the removed shorthand: a read becomes
   `{"eval": {"type": "math/<op>", "a": {"type": "pointer/get", "pointer": p},
-  "b": v}}`; a write becomes `{"pointer/set": p, "value": v}`.
+"b": v}}`; a write becomes `{"pointer/set": p, "value": v}`.
 - No `lib/` change — `Loader.validate` was already consistent with the target.
 
 ## Consequences

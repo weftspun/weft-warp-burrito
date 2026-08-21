@@ -22,7 +22,11 @@ against the whole repo as its context.
 endpoint — that's `/mcp`:
 
 ```json
-{ "mcpServers": { "taskweft": { "type": "http", "url": "https://taskweft-mcp.fly.dev/mcp" } } }
+{
+  "mcpServers": {
+    "taskweft": { "type": "http", "url": "https://taskweft-mcp.fly.dev/mcp" }
+  }
+}
 ```
 
 No header needed — the client discovers and drives the OAuth flow (GitHub
